@@ -4,9 +4,10 @@ use arrow::compute::concat;
 use arrow::datatypes::{DataType, Field, Schema};
 use arrow::ipc::writer::FileWriter;
 use arrow::record_batch::RecordBatch;
+use chrono::Local;
 use dora_node_api::{self, DoraNode, Event};
 use std::collections::HashMap;
-use std::fs::{File, create_dir_all};
+use std::fs::{File, create_dir};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use tokio::sync::mpsc::{UnboundedSender, unbounded_channel};
@@ -37,9 +38,10 @@ async fn main() -> eyre::Result<()> {
         ),
     > = HashMap::new();
 
-    let record_path = "record-bag";
+    let timestamp = Local::now().format("%Y%m%d_%H%M%S").to_string();
+    let record_path = format!("record-session_{}", timestamp);
     let mut type_count = 0;
-    create_dir_all(record_path)?;
+    create_dir(record_path.clone())?;
 
     while let Some(event) = events.recv() {
         match event {
@@ -217,30 +219,27 @@ async fn main() -> eyre::Result<()> {
             }
             _event => {
                 println!("Stop recording...");
-
-                // Drop all the senders by taking ownership of the map and consuming it
-                let mut handles = Vec::new();
-
-                for (data_type, (sender, _semaphore, saved_msg_count, handle)) in
-                    type_channels.drain()
-                {
-                    drop(sender);
-                    handles.push((data_type, saved_msg_count, handle));
-                }
-
-                println!("Waiting for all writing tasks to complete...");
-
-                for (data_type, _, handle) in handles {
-                    if let Err(e) = handle.await {
-                        eprintln!("task {:?} wait failed: {}", data_type, e);
-                    }
-                }
-
-                println!("All data has been written in");
                 break;
             }
         }
     }
 
+    // Drop all the senders by taking ownership of the map and consuming it
+    let mut handles = Vec::new();
+
+    for (data_type, (sender, _semaphore, saved_msg_count, handle)) in type_channels.drain() {
+        drop(sender);
+        handles.push((data_type, saved_msg_count, handle));
+    }
+
+    println!("Waiting for all writing tasks to complete...");
+
+    for (data_type, _, handle) in handles {
+        if let Err(e) = handle.await {
+            eprintln!("task {:?} wait failed: {}", data_type, e);
+        }
+    }
+
+    println!("All data has been written in");
     Ok(())
 }

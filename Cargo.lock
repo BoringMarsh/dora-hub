@@ -3693,7 +3693,7 @@ version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b85e121e0a8b09795eec320e84baec7c975aef38ce8e9739f8ba336a54ef2496"
 dependencies = [
- "dora-message 0.8.0",
+ "dora-message",
  "dunce",
  "eyre",
  "fs_extra",
@@ -3721,7 +3721,7 @@ dependencies = [
  "bitstream-io 2.6.0",
  "bytemuck",
  "dav1d",
- "dora-node-api 0.5.0",
+ "dora-node-api",
  "eyre",
  "log",
  "pyo3",
@@ -3732,7 +3732,7 @@ dependencies = [
 name = "dora-examples"
 version = "0.0.0"
 dependencies = [
- "dora-core 0.5.0",
+ "dora-core",
  "dora-tracing 0.5.0",
  "dunce",
  "eyre",
@@ -3761,7 +3761,7 @@ dependencies = [
 name = "dora-kit-car"
 version = "0.5.0"
 dependencies = [
- "dora-node-api 0.5.0",
+ "dora-node-api",
  "dotenv",
  "eyre",
  "pyo3",
@@ -3776,7 +3776,7 @@ name = "dora-mcp-host"
 version = "0.5.0"
 dependencies = [
  "chrono",
- "dora-node-api 0.5.0",
+ "dora-node-api",
  "eyre",
  "figment",
  "futures",
@@ -3801,7 +3801,7 @@ name = "dora-mcp-server"
 version = "0.5.0"
 dependencies = [
  "chrono",
- "dora-node-api 0.5.0",
+ "dora-node-api",
  "eyre",
  "figment",
  "futures",
@@ -3850,7 +3850,7 @@ dependencies = [
 name = "dora-mistral-rs"
 version = "0.1.0"
 dependencies = [
- "dora-node-api 0.5.0",
+ "dora-node-api",
  "eyre",
  "mistralrs",
  "tokio",
@@ -3892,9 +3892,9 @@ dependencies = [
  "arrow-schema 54.3.1",
  "bincode",
  "colored 3.0.0",
- "dora-arrow-convert 0.5.0",
- "dora-core 0.5.0",
- "dora-message 0.8.0",
+ "dora-arrow-convert",
+ "dora-core",
+ "dora-message",
  "dora-tracing 0.5.0",
  "eyre",
  "flume",
@@ -3914,7 +3914,7 @@ dependencies = [
 name = "dora-object-to-pose"
 version = "0.5.0"
 dependencies = [
- "dora-node-api 0.5.0",
+ "dora-node-api",
  "eyre",
  "pyo3",
 ]
@@ -3924,7 +3924,7 @@ name = "dora-openai-proxy-server"
 version = "0.5.0"
 dependencies = [
  "chrono",
- "dora-node-api 0.5.0",
+ "dora-node-api",
  "eyre",
  "futures",
  "hyper 0.14.32",
@@ -3951,7 +3951,7 @@ dependencies = [
  "base64 0.22.1",
  "bytes",
  "criterion",
- "dora-node-api 0.5.0",
+ "dora-node-api",
  "eyre",
  "fastwebsockets",
  "futures-concurrency",
@@ -3978,7 +3978,7 @@ version = "0.0.1"
 dependencies = [
  "base64 0.22.1",
  "clap 4.5.48",
- "dora-node-api 0.5.0",
+ "dora-node-api",
  "eyre",
  "image 0.24.9",
  "img_hash",
@@ -3999,7 +3999,7 @@ version = "0.5.0"
 dependencies = [
  "avif-serialize",
  "bytemuck",
- "dora-node-api 0.5.0",
+ "dora-node-api",
  "eyre",
  "little_exif",
  "log",
@@ -4012,7 +4012,7 @@ name = "dora-record"
 version = "0.5.0"
 dependencies = [
  "chrono",
- "dora-node-api 0.5.0",
+ "dora-node-api",
  "dora-tracing 0.5.0",
  "eyre",
  "parquet 54.3.1",
@@ -4021,11 +4021,11 @@ dependencies = [
 
 [[package]]
 name = "dora-recorder"
-version = "0.1.0"
+version = "0.5.0"
 dependencies = [
  "arrow 54.3.1",
  "chrono",
- "dora-node-api 0.3.13",
+ "dora-node-api",
  "dora-tracing 0.3.13",
  "eyre",
  "parquet 54.3.1",
@@ -4037,7 +4037,7 @@ name = "dora-rerun"
 version = "0.5.0"
 dependencies = [
  "bytemuck",
- "dora-node-api 0.5.0",
+ "dora-node-api",
  "eyre",
  "k",
  "ndarray 0.15.6",
@@ -4052,7 +4052,7 @@ dependencies = [
 name = "dora-rustypot"
 version = "0.1.0"
 dependencies = [
- "dora-node-api 0.5.0",
+ "dora-node-api",
  "eyre",
  "pyo3",
  "rustypot",
@@ -14155,7 +14155,7 @@ dependencies = [
 name = "terminal-print"
 version = "0.5.0"
 dependencies = [
- "dora-node-api 0.5.0",
+ "dora-node-api",
  "eyre",
 ]
 
