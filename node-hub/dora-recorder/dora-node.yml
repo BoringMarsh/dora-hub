@@ -6,7 +6,7 @@ name: dora-recorder
 namespace: dora-rs
 description: >-
   Record dataflow inputs to disk — writes received inputs to Apache Arrow IPC
-  files (.arrow) under record-bag/type-<count>.arrow, automatically grouped
+  files (.arrow) under record-session_<timestamp>/type-<count>.arrow, automatically grouped
   by their Arrow DataType. Features asynchronous buffered writing and semaphore-based
   backpressure to protect against memory overflow (OOM).
 categories: [recorder]
@@ -35,8 +35,11 @@ inputs:
 
 outputs: {}
 
+# The stream to record. Supports any Arrow value up to 16 MB. 
+# Messages exceeding 16 MB will be skipped due to internal memory queue limits.
 example: |
   - id: dora-recorder
     hub: dora-recorder@^0.5
     inputs:
       data: some-node/output
+      

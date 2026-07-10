@@ -7,7 +7,7 @@ use arrow::record_batch::RecordBatch;
 use chrono::Local;
 use dora_node_api::{self, DoraNode, Event};
 use std::collections::HashMap;
-use std::fs::{File, create_dir};
+use std::fs::{File, create_dir_all};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use tokio::sync::mpsc::{UnboundedSender, unbounded_channel};
@@ -27,26 +27,26 @@ async fn main() -> eyre::Result<()> {
     let buffer_size = 16 * 1024 * 1024;
     let flush_threshold = buffer_size / 4;
 
+    type ChannelEntry = (
+        UnboundedSender<RecordMessage>,
+        Arc<Semaphore>,
+        Arc<AtomicUsize>,
+        JoinHandle<()>,
+    );
+
     // map structure: data_type --> asynchronous write task
-    let mut type_channels: HashMap<
-        DataType,
-        (
-            UnboundedSender<RecordMessage>,
-            Arc<Semaphore>, // 每个通道独立的信号量
-            Arc<AtomicUsize>,
-            JoinHandle<()>,
-        ),
-    > = HashMap::new();
+    let mut type_channels: HashMap<DataType, ChannelEntry> = HashMap::new();
 
     let timestamp = Local::now().format("%Y%m%d_%H%M%S").to_string();
     let record_path = format!("record-session_{}", timestamp);
     let mut type_count = 0;
-    create_dir(record_path.clone())?;
+    create_dir_all(record_path.clone())?;
 
     while let Some(event) = events.recv() {
         match event {
             Event::Input { id, data, metadata } => {
                 let msg_type_clone = data.data_type().clone();
+                let msg_type_for_closure = msg_type_clone.clone();
                 let msg_length_clone = data.to_data().get_array_memory_size();
                 let msg_timestamp = metadata.timestamp().get_time().as_u64();
                 let msg_topic = id.to_string();
@@ -105,7 +105,7 @@ async fn main() -> eyre::Result<()> {
                                     let mut current_offset = 0;
                                     offsets.push(current_offset);
 
-                                    for arr in payloads.into_iter() {
+                                    for arr in payloads.iter_mut() {
                                         current_offset += arr.len() as i32;
                                         offsets.push(current_offset);
                                     }
@@ -113,7 +113,15 @@ async fn main() -> eyre::Result<()> {
                                     let offset_buffer = OffsetBuffer::new(offsets.into());
                                     let array_refs: Vec<&dyn Array> =
                                         payloads.iter().map(|a| a.as_ref()).collect();
-                                    let values_array = concat(&array_refs).unwrap();
+
+                                    let values_array = match concat(&array_refs) {
+                                        Ok(arr) => arr,
+                                        Err(e) => {
+                                            eprintln!("Failed to concatenate arrow arrays: {}", e);
+                                            return;
+                                        }
+                                    };
+
                                     let list_array = ListArray::new(
                                         payload_field.clone(),
                                         offset_buffer,
@@ -121,15 +129,20 @@ async fn main() -> eyre::Result<()> {
                                         None,
                                     );
 
-                                    let batch = RecordBatch::try_new(
+                                    let batch = match RecordBatch::try_new(
                                         schema.clone(),
                                         vec![
                                             Arc::new(list_array),
                                             Arc::new(UInt64Array::from(timestamps.clone())),
                                             Arc::new(StringArray::from(topics.clone())),
                                         ],
-                                    )
-                                    .unwrap();
+                                    ) {
+                                        Ok(b) => b,
+                                        Err(e) => {
+                                            eprintln!("Failed to create RecordBatch: {}", e);
+                                            return;
+                                        }
+                                    };
 
                                     writer
                                         .write(&batch)
@@ -165,7 +178,7 @@ async fn main() -> eyre::Result<()> {
                             // graceful shutdown
                             println!(
                                 "Channel closed, writing remaining data: {:?} ({} left)",
-                                msg_type_clone,
+                                msg_type_for_closure,
                                 payload_vec.len()
                             );
 
@@ -200,14 +213,14 @@ async fn main() -> eyre::Result<()> {
                             _permit: permit,
                         };
 
-                        if let Err(_) = sender.send(msg_wrap) {
-                            // eprintln!("Sending data failed (the receiving end may have been closed): {}", e);
+                        if sender.send(msg_wrap).is_err() {
+                            eprintln!("Sending data failed for {:?}", msg_type_clone);
                         };
                     }
                     Err(_) => {
                         // This channel is full and will be discarded directly
                         // without affecting other data types or blocking the main loop
-                        // eprintln!("Channel for {:?} is full, dropping message", msg_type_clone);
+                        eprintln!("Channel for {:?} is full, dropping message", msg_type_clone);
                     }
                 }
             }

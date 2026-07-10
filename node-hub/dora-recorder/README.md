@@ -16,7 +16,7 @@ dora data recording in Apache Arrow IPC format
 ## Output Files
 
 **Format**: Arrow IPC file
-**Path**: `record-bag/type-<TYPE_ID>.arrow` (TYPE-ID starts from 1 and ends at the total number of `data_types` of the message to be recorded)
+**Path**: `record-session_<TIMESTAMP>/type-<TYPE_ID>.arrow` (TYPE-ID starts from 1 and ends at the total number of `data_types` of the message to be recorded)
 
 **Columns**:
 - payload_list: List, containing the input messages
@@ -35,3 +35,7 @@ Example:
 ------------------------------------------------
 ...
 ```
+
+## Limitations
+
+**Message Size Cap**: Any single incoming message larger than **16 MB** will be dropped. This is due to the node's internal 16 MB semaphore-controlled memory queue, which is designed to prevent Out-Of-Memory (OOM) crashes under high-throughput conditions. If you need to record larger messages, consider adjusting the buffer size(`buffer_size` variable) in the source code.
